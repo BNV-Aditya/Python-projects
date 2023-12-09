@@ -9,7 +9,7 @@ Matrix = [['Y' for i in range(10)] for j in range(20)]
 
 Lrow,Lcol,RotVal = 0,0,0
 CLabel,LabelNo,PieceNo = '',0,0
-Event,Frames,LockF,score = '',0,0,0
+Event,Rotevent,Frames,LockF,score = '',False,0,0,0
 LabelDict,PieceMapExport,PieceDict = {},{},{}
 
 #Matrix[4][2],Matrix[6][8],Matrix[15][3] = 'N','N','N'
@@ -34,16 +34,16 @@ def create_piece():
         'O':[[-1,-1],[-1,0],[0,-1],[0,0]],
         'T':[[-1,0],[0,-1],[0,0],[0,1]],
         'I':[[-1,0],[0,0],[1,0],[2,0]],
-        'L':[[-1,-1],[0,-1],[1,-1],[1,0]],
+        'L':[[-1,0],[0,0],[1,0],[1,1]],
         'J':[[-1,0],[0,0],[1,0],[1,-1]],
-        'Z':[[-1,-1],[-1,0],[0,0],[0,1]],
+        'Z':[[-1,-1],[0,0],[-1,0],[0,1]],
         'S':[[0,-1],[0,0],[-1,0],[-1,1]]
     }
     Piececolour = {'O':'yellow','T':'mediumpurple','I':'cyan','L':'orange','J':'blue','Z':'red','S':'green'}
-    Piece =random.choice(['O','I','T','L','J','Z','S'])
+    Piece = random.choice(['T','L','J','Z','S'])
     PieceMat = [['Y' for i in range(4)] for j in range(4)]
     RotVal,PosVal = 0,0
-    if 'N' in Matrix[0][4]: print('game over')
+    if 'N' in Matrix[1][4]: print('game over')
     else:
         for i in range(4):
             create_label(PieceMapCreate[Piece][i][0] + 1,PieceMapCreate[Piece][i][1] + 4,Piececolour[Piece])
@@ -56,6 +56,8 @@ def create_piece():
         #print(PieceMat)
         #print(PosMat)
 create_piece()
+
+
 
 def move_func(event):
     global Matrix,LockF,PieceMapExport,PosVal
@@ -103,10 +105,8 @@ def move_func(event):
     for i in PieceMapExport.values():
         i['label'].grid(column = i['col'],row = i['row'])
         Matrix[i['row']][i['col']] = 'M'
-        #print()
     traverse_list(Matrix)
     for i in PieceMapExport.values():
-        i['label'].grid(column = i['col'],row = i['row'])
         Matrix[i['row']][i['col']] = 'Y'
     for i in PieceMapExport.values():
         if i['row'] == 19 or Matrix[i['row']+1][i['col']] == 'N' :
@@ -117,66 +117,78 @@ def move_func(event):
         LockF = 1
         lock_set()
 
-def rotate(event):
-    global PosVal
-    for i in range(len(PieceMapExport.values())):
-        if PieceMapExport[i]['row'] - PieceMapCreate[Piece][i][0] == PieceMapExport[i]['row'] and PieceMapExport[i]['col'] - PieceMapCreate[Piece][i][1] == PieceMapExport[i]['col']:
-            PosVal = [PieceMapExport[i]['row'],PieceMapExport[i]['col']]
-    one = 1
-    if PosVal[one] == 0 or PosVal[one]+1 == 'N':
-        if Piece == 'O':
-            pass
-        else:
-            print('right')
-            move_func('Right')
-    elif PosVal[one] == 9 or PosVal[one]-1 == 'N':
-        if Piece == 'O':
-            pass
-        else:
-            print('left')
-            move_func('Left')
-    for i in range(len(PieceMapExport.values())):
-        if PieceMapExport[i]['row'] - PieceMapCreate[Piece][i][0] == PieceMapExport[i]['row'] and PieceMapExport[i]['col'] - PieceMapCreate[Piece][i][1] == PieceMapExport[i]['col']:
-            PosVal = [PieceMapExport[i]['row'],PieceMapExport[i]['col']]
+def rotate_dir(event):
+    global Rotevent
+    Rotevent = True
 
-    m = [[[PosVal[0] +i,PosVal[1] +j] for i in range(-1,2)] for j in range(-1,2)] 
-
-    for i in range(len(m)):
-        for j in range(i):
-            for k in PieceMapExport.values():
-                if k['row'] == m[i][j][0] and k['col'] == m[i][j][1]:
-                    m[i][j].append(k)
-                    break
-                else: 
-                    m[i][j].append('No Label')
-                    break
-    
-    for i in range(3):
-        for j in range(3):
-            print(m[i][j])
-    print()
-    '''        matrix1 = [
-            ['01','02','03'],
-            ['04','05','06'],
-            ['07','08','09']
-        ]
+def rotate():
+    global PosVal,Rotevent,PieceMapExport,PieceMapCreate
+    for i in PieceMapExport.values():
+        Matrix[i['row']][i['col']] = 'M'
+    if Rotevent == True:
+        for i in range(len(PieceMapExport.values())):
+            if PieceMapExport[i]['row'] - PieceMapCreate[Piece][i][0] == PieceMapExport[i]['row'] and PieceMapExport[i]['col'] - PieceMapCreate[Piece][i][1] == PieceMapExport[i]['col']:
+                PosVal = [int(PieceMapExport[i]['row']),int(PieceMapExport[i]['col'])]
+        print(type(PosVal))
+        if PosVal[1] == 0 or PosVal[1]-1 == 'N':
+            if Piece == 'O':
+                pass
+            else:
+                print('right')
+                for i in PieceMapExport.values():
+                    Matrix[i['row']][i['col']] = 'Y'
+                move_func('Right')
+        elif PosVal[1] == 9 or PosVal[1]+1 == 'N':
+            if Piece == 'O':
+                pass
+            else:
+                print('left')
+                for i in PieceMapExport.values():
+                    Matrix[i['row']][i['col']] = 'Y'
+                move_func('Left')  
+        for i in range(len(PieceMapExport.values())):
+            if PieceMapExport[i]['row'] - PieceMapCreate[Piece][i][0] == PieceMapExport[i]['row'] and PieceMapExport[i]['col'] - PieceMapCreate[Piece][i][1] == PieceMapExport[i]['col']:
+                PosVal = [PieceMapExport[i]['row'],PieceMapExport[i]['col']]
+        
+        m1 = [[[PosVal[1] +i,PosVal[0] +j] for i in range(-1,2)] for j in range(-1,2)]
+        m2 = [[Matrix[PosVal[0] +j][PosVal[1] +i] for i in range(-1,2)] for j in range(-1,2)]
+        
         matrix2 = []
-        for k in range(int(input('lol:'))):
-            for i in range(len(matrix1)):
-                m = []
-                for j in range(len(matrix1[i])):
-                    m.append(matrix1[j][2-i])
-                matrix2.append(m)
-            matrix1 = matrix2
-            matrix2 = []
-            print()'''
-
+        for i in range(len(m2)):
+            m = []
+            for j in range(len(m2[i])):
+                m.append(m2[j][2-i])
+            print(m,m1[i])
+            matrix2.append(m)
+        m2 = matrix2
+        matrix2 = []
+        print(m2)
+        lbct = 0
+        for i in range(3):
+            for j in range(3):
+                if m2[i][j] == 'M':
+                    if lbct < 4 :
+                        PieceMapExport[lbct]['row'] =  m1[i][j][1]
+                        PieceMapExport[lbct]['col'] =  m1[i][j][0]
+                        Matrix[m1[i][j][1]][m1[i][j][0]] = 'M'
+                        print(m1[i][j],end = ' ')
+                        lbct+=1
+                    else:Matrix[m1[i][j][1]][m1[i][j][0]] = 'Y'
+                else:Matrix[m1[i][j][1]][m1[i][j][0]] = 'Y'
+        lbct = 0
+        
+    for i in PieceMapExport.values():
+        i['label'].grid(column = i['col'],row = i['row'])
+        Matrix[i['row']][i['col']] = 'M'
+        traverse_list(Matrix)
+        Matrix[i['row']][i['col']] = 'Y'
+    Rotevent = False
     
+
 
 def lock_set():
     global LabelNo,Lrow,Lcol,Matrix,LockF,PieceMapExport,PieceNo
     if (LockF)%5 == 0:
-        #print('lol')
         for i in PieceMapExport.values():
             i['label'].grid(column = i['col'],row = i['row'])
             Matrix[i['row']][i['col']] = 'N'
@@ -184,7 +196,6 @@ def lock_set():
             PieceNo += 1
         create_piece()
         LockF = 0
-    #print(LockF)
 
 def score_func():
     global Matrix,LabelDict,score
@@ -214,6 +225,7 @@ def auto_down():
 
 def game_update():
     global Event,Frames,PosVal
+    rotate()
     move_func(Event)
     auto_down()
     Lock = False
@@ -226,7 +238,7 @@ root.bind('<Down>',move_func_dir)
 #root.bind('<Up>',move_func_dir)
 root.bind('<Left>',move_func_dir)
 root.bind('<Right>',move_func_dir)
-root.bind('<Up>',rotate)
+root.bind('<Up>',rotate_dir)
 root.after(100,game_update)
 
 root.geometry('210x450+200+200')
